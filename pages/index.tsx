@@ -1,6 +1,7 @@
 import Head from "next/head";
 import { Card } from "../components";
 import styles from "../styles/Home.module.css";
+import { ChatLobby } from "../components/ChatLobby";
 
 export default function Home() {
   return (
@@ -22,6 +23,7 @@ export default function Home() {
             <p>Make moves by typing the correct algebraic notation.</p>
           </Card>
         </div>
+        <ChatLobby />
       </main>
     </div>
   );
