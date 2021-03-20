@@ -7,10 +7,10 @@ export const ChatLobby = () => {
     if (lobby === null) {
       return;
     }
-    const chatInput = document.querySelector("#chat-input");
+    const chatInput: any = document.querySelector("#chat-input");
     const messagesContainer = document.querySelector("#messages");
 
-    chatInput.addEventListener("keypress", (event) => {
+    chatInput.addEventListener("keypress", (event: any) => {
       if (event.key === "Enter") {
         lobby.push("new_msg", { body: chatInput.value });
         chatInput.value = "";
