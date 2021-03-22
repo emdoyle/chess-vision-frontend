@@ -3,7 +3,8 @@ import { useStockfishOpponent } from "./stockfish";
 import { useRemotePlayerOpponent } from "./remote_player";
 
 export type OpponentState = {
-  exchangeMoves: (moveState: MoveState) => Promise<OpponentMoveResponse>;
+  sendMove: (moveState: MoveState) => void;
+  receiveMove: () => Promise<OpponentMoveResponse>;
 };
 
 export type OpponentStateHook = () => OpponentState;

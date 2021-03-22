@@ -8,7 +8,7 @@ import { useOpponent } from "../hooks/opponent";
 const KEY_ENTER = "Enter";
 
 export default function TypeToMove() {
-  const { exchangeMoves } = useOpponent(OpponentType.STOCKFISH);
+  const { sendMove, receiveMove } = useOpponent(OpponentType.STOCKFISH);
   const [opponentThinking, setOpponentThinking] = useState<boolean>(false);
   const [inputSAN, setInputSAN] = useState<string>("");
   const { play, processSAN, getFen, Board, boardRef } = useChess();
@@ -22,10 +22,11 @@ export default function TypeToMove() {
     }
     play(parseResult.move);
     setOpponentThinking(true);
-    const opponentResponse = await exchangeMoves({
+    sendMove({
       fen: getFen(),
       lastMove: parseResult.move,
     });
+    const opponentResponse = await receiveMove();
     if (opponentResponse.status === MoveResponseStatus.OK) {
       play(opponentResponse.move);
     } else {

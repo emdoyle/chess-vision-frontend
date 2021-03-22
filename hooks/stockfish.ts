@@ -28,12 +28,18 @@ export const useStockfishOpponent: OpponentStateHook = () => {
     })();
   }, []);
 
-  const exchangeMoves: (
-    moveState: MoveState
-  ) => Promise<OpponentMoveResponse> = async (moveState: MoveState) => {
+  const sendMove = (moveState: MoveState) => {
     if (stockfish === null) {
-      alert("Stockfish failed to initialize, cannot exchange moves.");
-      return { status: MoveResponseStatus.CONN_ERROR };
+      alert("Stockfish failed to initialize, cannot send move.");
+      return;
+    }
+    stockfish.postMessage(`position fen ${moveState.fen}`);
+  };
+
+  const receiveMove: () => Promise<OpponentMoveResponse> = async () => {
+    if (stockfish === null) {
+      alert("Stockfish failed to initialize, cannot receive move.");
+      return;
     }
     let stockfishMove = null;
     // This attaches a listener to stockfish and creates a closure around a local variable
@@ -44,7 +50,6 @@ export const useStockfishOpponent: OpponentStateHook = () => {
       }
     };
     stockfish.addMessageListener(tempListener);
-    stockfish.postMessage(`position fen ${moveState.fen}`);
     stockfish.postMessage(`go movetime ${MOVE_TIME}`);
     await sleep(MOVE_TIME);
     stockfish.postMessage("stop");
@@ -56,5 +61,5 @@ export const useStockfishOpponent: OpponentStateHook = () => {
     return { status: MoveResponseStatus.OK, move: stockfishMove };
   };
 
-  return { exchangeMoves };
+  return { sendMove, receiveMove };
 };
