@@ -46,8 +46,9 @@ export const useStockfishOpponent: OpponentStateHook = () => {
     stockfish.addMessageListener(tempListener);
     stockfish.postMessage(`position fen ${moveState.fen}`);
     stockfish.postMessage(`go movetime ${MOVE_TIME}`);
-    await sleep(MOVE_TIME + MOVE_BUFFER);
+    await sleep(MOVE_TIME);
     stockfish.postMessage("stop");
+    await sleep(MOVE_BUFFER);
     stockfish.removeMessageListener(tempListener);
     if (stockfishMove === null) {
       return { status: MoveResponseStatus.CONN_ERROR };
