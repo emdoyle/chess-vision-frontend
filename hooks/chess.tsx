@@ -18,14 +18,14 @@ type InvalidMove = {
 
 type ParseMoveResult = ValidMove | InvalidMove;
 
-type ChessBoard = FC<Chessground.propTypes>;
+type ChessBoardComponent = FC<Chessground.propTypes>;
 
 type ChessState = {
   play: (move: Move) => void;
   processSAN: (moveSAN: string) => ParseMoveResult;
   getFen: () => string;
   gameStatus: string;
-  Board: ChessBoard;
+  Board: ChessBoardComponent;
   boardRef: Ref<Chessground>;
 };
 

@@ -1,53 +1,19 @@
 import styles from "../styles/Home.module.css";
 import Head from "next/head";
-import { ChangeEvent, useEffect, useState } from "react";
-import { parseUci } from "chessops";
-import { StockfishInterface } from "../types";
+import { ChangeEvent, useState } from "react";
 import { useChess } from "../hooks/chess";
+import { MoveResponseStatus, OpponentType } from "../types";
+import { useOpponent } from "../hooks/opponent";
 
 const KEY_ENTER = "Enter";
 
 export default function TypeToMove() {
-  const [stockfish, setStockfish] = useState<StockfishInterface | null>(null);
-  const [stockfishThinking, setStockfishThinking] = useState<boolean>(false);
+  const { exchangeMoves } = useOpponent(OpponentType.STOCKFISH);
+  const [opponentThinking, setOpponentThinking] = useState<boolean>(false);
   const [inputSAN, setInputSAN] = useState<string>("");
   const { play, processSAN, getFen, Board, boardRef } = useChess();
 
-  useEffect(() => {
-    (async () => {
-      if (window["Stockfish"] === undefined) {
-        alert("Failed to load Stockfish.");
-        return;
-      }
-      const _stockfish: StockfishInterface = await window["Stockfish"]();
-      _stockfish.addMessageListener((line) => {
-        console.log(line);
-        if (line.startsWith("bestmove")) {
-          const bestMove = parseUci(line.split(" ")[1]);
-          if (bestMove !== null) {
-            play(bestMove);
-            setStockfishThinking(false);
-          }
-        }
-      });
-      _stockfish.postMessage("uci");
-      _stockfish.postMessage("ucinewgame");
-      _stockfish.postMessage("isready");
-      setStockfish(_stockfish);
-    })();
-  }, []);
-
-  const getStockfishMove = () => {
-    if (stockfish === null) {
-      alert("Stockfish failed to initialize.");
-      return null;
-    }
-    stockfish.postMessage(`position fen ${getFen()}`);
-    stockfish.postMessage("go movetime 1000");
-    setStockfishThinking(true);
-  };
-
-  const handleUserMove = () => {
+  const handleUserMove = async () => {
     const parseResult = processSAN(inputSAN);
     setInputSAN("");
     if (parseResult.valid === false) {
@@ -55,7 +21,19 @@ export default function TypeToMove() {
       return;
     }
     play(parseResult.move);
-    getStockfishMove();
+    setOpponentThinking(true);
+    const opponentResponse = await exchangeMoves({
+      fen: getFen(),
+      lastMove: parseResult.move,
+    });
+    if (opponentResponse.status === MoveResponseStatus.OK) {
+      play(opponentResponse.move);
+    } else {
+      alert(
+        `Failed to exchange moves with opponent. Error code: ${opponentResponse.status}`
+      );
+    }
+    setOpponentThinking(false);
   };
 
   return (
@@ -72,7 +50,7 @@ export default function TypeToMove() {
         <p className={styles.description}>
           Type a valid SAN move to play a game of chess.
         </p>
-        <p>{stockfishThinking ? " (stockfish is thinking...)" : "Your turn"}</p>
+        <p>{opponentThinking ? " (stockfish is thinking...)" : "Your turn"}</p>
 
         <div className={styles.grid}>
           <Board viewOnly ref={boardRef} />
@@ -83,13 +61,15 @@ export default function TypeToMove() {
               onChange={(event: ChangeEvent<HTMLInputElement>) =>
                 setInputSAN(event.target.value)
               }
-              onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => {
+              onKeyDown={async (
+                event: React.KeyboardEvent<HTMLInputElement>
+              ) => {
                 if (event.key === KEY_ENTER) {
-                  handleUserMove();
+                  await handleUserMove();
                 }
               }}
             />
-            <button onClick={handleUserMove}>Submit</button>
+            <button onClick={async () => await handleUserMove()}>Submit</button>
           </div>
         </div>
       </main>
