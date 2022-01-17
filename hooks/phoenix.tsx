@@ -17,7 +17,7 @@ export const PhoenixSocketProvider = ({
   children,
 }: {
   endpoint: string;
-  options?;
+  options?: Record<string, any>;
   children: ReactNode;
 }) => {
   const [socket, setSocket] = useState<Socket | null>(null);
